@@ -78,12 +78,12 @@ export default function DistancePanel({ open, onToggle }: { open: boolean; onTog
                     ))}
 
                     <div className={row_grid}>
-                        <span className="relative col-start-2 h-3 font-mono text-[10px] text-ink-3">
+                        <span className="relative col-start-2 h-3 font-mono text-[11px] text-ink-3">
                             {AXIS_TICKS.map(km => (
                                 <span key={km} className="absolute -translate-x-1/2" style={{ left: percent(km) }}>{km}</span>
                             ))}
                         </span>
-                        <span className="font-mono text-[10px] text-ink-3">km</span>
+                        <span className="font-mono text-[11px] text-ink-3">km</span>
                     </div>
 
                     <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-ink-2" aria-hidden>
@@ -113,7 +113,7 @@ export default function DistancePanel({ open, onToggle }: { open: boolean; onTog
                     {Object.values(SOURCES).map(({ citation, url }) => (
                         <li key={url}>
                             {citation}{' '}
-                            <a className="break-all text-neg underline underline-offset-2" href={url} target="_blank" rel="noreferrer">{url.replace(/^https:\/\//, '')}</a>
+                            <a className="break-all text-ink underline underline-offset-2" href={url} target="_blank" rel="noreferrer">{url.replace(/^https:\/\//, '')}</a>
                         </li>
                     ))}
                 </ol>
@@ -127,8 +127,8 @@ function Stat({ value, label, source }: { value: string; label: string; source: 
     return (
         <div className="flex flex-col border border-line p-1.5">
             <dd className="m-0 font-mono text-[15px] font-semibold">{value}</dd>
-            <dt className="mt-0.5 text-[10px]/[1.3] text-ink-2">{label}</dt>
-            <span className="mt-auto pt-1 font-mono text-[9px] text-ink-3 uppercase">{source}</span>
+            <dt className="mt-0.5 text-[11px]/[1.3] text-ink-2">{label}</dt>
+            <span className="mt-auto pt-1 font-mono text-[11px] text-ink-3 uppercase">{source}</span>
         </div>
     );
 }
@@ -138,9 +138,15 @@ function RangeRow({ trip, active, onHover }: { trip: TripDistance; active: boole
 
     return (
         <li className={cx(row_grid, 'cursor-default py-[3px]', active && 'bg-track')} onMouseEnter={() => onHover(trip)}>
-            <span className="truncate text-xs">{label}</span>
+            <span className="truncate text-xs">
+                {label}
+                <span className="sr-only">
+                    : median {format_km(median_km)}
+                    {middle_half_km && `, middle half of trips ${format_km(middle_half_km[0])} to ${format_km(middle_half_km[1])}`}
+                </span>
+            </span>
 
-            <span className="relative block h-3 bg-track/60">
+            <span className="relative block h-3 bg-track/60" aria-hidden>
                 {/* typical neighbourhood width */}
                 <span className="absolute -top-0.5 -bottom-0.5 border-l-2 border-dashed border-neg" style={{ left: percent(MEDIAN_LSOA_WIDTH_KM) }} />
                 {middle_half_km && (

@@ -28,12 +28,12 @@ export default function BarList({
     <ul className="m-0 list-none p-0">
       {rows.map((row) => (
         <li
-          className="grid grid-cols-[1fr_72px_44px] items-center gap-2 py-0.5"
+          className="grid grid-cols-[1fr_72px_minmax(44px,auto)] items-center gap-2 py-0.5"
           key={row.key}
           title={row.title}
         >
           <span className="truncate">{row.label}</span>
-          <span className="h-2 overflow-hidden bg-track">
+          <span className="h-2 overflow-hidden bg-track" aria-hidden>
             <span
               className={cx(
                 "block h-full",

@@ -120,8 +120,8 @@ function DecileChart({ deciles }: { deciles: DeprivationDecile[] }) {
                         key={decile}
                         className="flex h-full flex-1 cursor-default items-end"
                         onMouseEnter={() => set_hovered(i)}
-                        aria-label={`Decile ${decile}: ${format_rate(rate)} crimes per 1,000 residents`}
                     >
+                        <span className="sr-only">Tenth {decile} of 10: {format_rate(rate)} crimes per 1,000 residents</span>
                         <span
                             className={cx('block w-full bg-crime transition-opacity', hovered !== null && hovered !== i && 'opacity-40')}
                             style={{ height: `${rate / highest * 100}%` }}
@@ -130,7 +130,7 @@ function DecileChart({ deciles }: { deciles: DeprivationDecile[] }) {
                 ))}
             </ol>
 
-            <div className="mt-1 flex justify-between font-mono text-[10px] text-ink-3">
+            <div className="mt-1 flex justify-between font-mono text-[11px] text-ink-3">
                 <span>← least deprived</span>
                 <span>most deprived →</span>
             </div>

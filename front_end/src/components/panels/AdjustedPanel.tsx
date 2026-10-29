@@ -85,7 +85,10 @@ function DumbbellRow({ group, rho, adjusted_rho, rho_with_deprivation, domain }:
                 `This group's share vs. deprivation: ρ = ${format_rho(rho_with_deprivation)}`
             }
         >
-            <span className="truncate">{GROUP_LABELS[group]}</span>
+            <span className="truncate">
+                {GROUP_LABELS[group]}
+                <span className="sr-only">: before {format_rho(rho)}, after accounting for deprivation</span>
+            </span>
 
             <DivergingTrack>
                 <span

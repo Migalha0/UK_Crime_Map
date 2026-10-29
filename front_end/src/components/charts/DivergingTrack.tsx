@@ -10,6 +10,7 @@ export function DivergingTrack({ className, children }: { className?: string; ch
     return (
         // zero line drawn by ::before
         <span
+            aria-hidden
             className={cx(
                 'relative block h-2.5',
                 'before:absolute before:-top-[3px] before:-bottom-[3px] before:left-1/2 before:w-px before:bg-ink-3',
@@ -46,7 +47,7 @@ export function DivergingBar({ value, domain }: { value: number; domain: number 
 /** Axis labels under a column of tracks: −domain, 0, +domain */
 export function DivergingAxis({ domain, className }: { domain: number; className?: string }) {
     return (
-        <span className={cx('flex justify-between font-mono text-[10px] text-ink-3', className)}>
+        <span aria-hidden className={cx('flex justify-between font-mono text-[11px] text-ink-3', className)}>
             <span>−{domain.toFixed(1)}</span>
             <span>0</span>
             <span>+{domain.toFixed(1)}</span>

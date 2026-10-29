@@ -84,7 +84,7 @@ export default function CrimeGroupPanel({ result, open, onToggle }: CrimeGroupPa
 }
 
 function Tag({ children }: { children: string }) {
-    return <span className="ml-1.5 border-2 border-ink bg-brand px-[5px] text-[10px] font-bold text-brand-ink uppercase">{children}</span>;
+    return <span className="ml-1.5 border-2 border-ink bg-brand px-[5px] text-[11px] font-bold text-brand-ink uppercase">{children}</span>;
 }
 
 function AssociationRow({ crime_type, ranking, domain }: CrimeTypeRanking & { domain: number }) {

@@ -75,7 +75,7 @@ export default function AreaDetails({
         <>
           {topCrime.count > 0 && (
             <p className="mt-2.5 mb-0 border-l-[3px] border-crime bg-highlight px-2.5 py-2 font-medium">
-              <span className="block text-[11px] font-normal text-ink-3">
+              <span className="block text-[11px] font-normal text-ink-2">
                 Most common
               </span>
               {topCrime.name}

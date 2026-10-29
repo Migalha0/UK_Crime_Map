@@ -7,16 +7,10 @@ import { BOUNDARIES_URL } from '../../data/load_data';
 import { DATA_BOUNDS, PAN_BOUNDS, centre_in_clear_space, zoom_to_fit, type ClearSpace } from '../../lib/map_bounds';
 import { EMPTY_FILL, HIGHLIGHT_CASING_PAINT, HIGHLIGHT_PAINT, SEAM_PAINT } from '../../lib/map_style';
 import type { MapOverlay } from '../../lib/map_overlays';
+import { REDUCED_MOTION_QUERY } from '../../hooks/useMediaQuery';
 import type { LsoaArea } from '../../types';
 
 setWorkerUrl(worker_url);
-
-// Width of the docked area panel plus its margin, so a selected area is never centred under it
-const DOCKED_PANEL_SPACE = 340 + 10 + 16;
-
-// Phones show the area details as a bottom sheet instead
-const BOTTOM_SHEET_QUERY = '(max-width: 639px)';
-const BOTTOM_SHEET_HEIGHT = 0.6;
 
 const MAX_ZOOM = 15;
 
@@ -64,8 +58,6 @@ const MAP_STYLE: StyleSpecification = {
     ],
 };
 
-const NO_CLEAR_SPACE: ClearSpace = { top: 0, right: 0, bottom: 0, left: 0 };
-
 interface CrimeMapProps {
     areas?: LsoaArea[];
     /** What the areas are coloured by (crime, deprivation or ethnicity); null until it has loaded */
@@ -74,7 +66,16 @@ interface CrimeMapProps {
     onSelect: (lsoa: string | null) => void;
     /** Called once the boundaries have loaded and the areas can be drawn */
     onBoundariesLoaded: () => void;
+    /** Map edges covered by other UI (bottom sheet, layer card); selections are centred in the rest */
+    clearSpace: ClearSpace;
+    /** Edges covered when the map first opens, so England & Wales starts fully in view */
+    initialClearSpace: ClearSpace;
 }
+
+const MAP_DESCRIPTION =
+    'Map of England and Wales, each neighbourhood coloured by the selected layer. ' +
+    'Arrow keys pan and plus and minus zoom. To select a neighbourhood with the keyboard, ' +
+    'use "Find a neighbourhood" in the panel.';
 
 /**
  * WebGL map (MapLibre) of England & Wales with every LSOA coloured by the chosen overlay.
@@ -84,7 +85,7 @@ interface CrimeMapProps {
  * Panning and zooming happen on the GPU, and the boundaries are tiled and coloured in a
  * background worker, so moving the map never waits on the main thread (see map_style.ts).
  */
-export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBoundariesLoaded }: CrimeMapProps) {
+export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBoundariesLoaded, clearSpace, initialClearSpace }: CrimeMapProps) {
     const container = useRef<HTMLDivElement>(null);
     const [map, set_map] = useState<MapLibreMap | null>(null);
     const [error, set_error] = useState<string | null>(null);
@@ -92,9 +93,9 @@ export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBou
     const area_by_lsoa = useMemo(() => new Map(areas?.map(area => [area.lsoa, area])), [areas]);
 
     // Latest values for the map's event handlers, which are bound once
-    const latest = useRef({ onSelect, onBoundariesLoaded, area_by_lsoa, overlay });
+    const latest = useRef({ onSelect, onBoundariesLoaded, area_by_lsoa, overlay, clearSpace });
     useEffect(() => {
-        latest.current = { onSelect, onBoundariesLoaded, area_by_lsoa, overlay };
+        latest.current = { onSelect, onBoundariesLoaded, area_by_lsoa, overlay, clearSpace };
     });
 
     // Create the map once
@@ -105,6 +106,7 @@ export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBou
                 container: container.current!,
                 style: MAP_STYLE,
                 bounds: DATA_BOUNDS,
+                fitBoundsOptions: { padding: initialClearSpace },
                 maxBounds: PAN_BOUNDS,
                 maxZoom: MAX_ZOOM,
                 renderWorldCopies: false,
@@ -119,19 +121,22 @@ export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBou
             return;
         }
 
+        // The canvas is the focusable, keyboard-driven part of the map: describe it for screen readers
+        created.getCanvas().setAttribute('aria-label', MAP_DESCRIPTION);
+
         created.touchZoomRotate.disableRotation();
         created.keyboard.disableRotation();
         created.addControl(new NavigationControl({ showCompass: false }), 'bottom-right');
 
-        // Never zoom out past England & Wales filling the view, on any screen size
+        // Never zoom out past England & Wales filling the uncovered part of the view, on any screen size
         const update_min_zoom = () => {
             const { clientWidth, clientHeight } = created.getContainer();
-            created.setMinZoom(Math.max(0, zoom_to_fit(DATA_BOUNDS, clientWidth, clientHeight, NO_CLEAR_SPACE)));
+            created.setMinZoom(Math.max(0, zoom_to_fit(DATA_BOUNDS, clientWidth, clientHeight, initialClearSpace)));
         };
         update_min_zoom();
         created.on('resize', update_min_zoom);
 
-        // MapLibre only watches window resizes; also catch layout changes (e.g. the month bar wrapping)
+        // MapLibre only watches window resizes; also catch layout changes (e.g. the sidebar appearing)
         const observer = new ResizeObserver(() => created.resize());
         observer.observe(container.current!);
 
@@ -251,7 +256,7 @@ export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBou
         };
     }, [map, selectedLsoa]);
 
-    // Centre a newly selected area in the space left clear of the details panel, and zoom so it fits:
+    // Centre a newly selected area in the space left clear of other UI, and zoom so it fits:
     //  - zoom in when it would be small on screen, never past SELECTION_MAX_ZOOM;
     //  - zoom out when it doesn't fit (e.g. a big area clicked while zoomed in on a small one);
     //  - otherwise keep the current zoom and only move the map.
@@ -262,9 +267,7 @@ export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBou
         }
 
         const { clientWidth: width, clientHeight: height } = map.getContainer();
-        const clear: ClearSpace = window.matchMedia(BOTTOM_SHEET_QUERY).matches
-            ? { top: 24, right: 24, bottom: Math.round(height * BOTTOM_SHEET_HEIGHT) + 24, left: 24 }
-            : { top: 24, right: 24, bottom: 24, left: DOCKED_PANEL_SPACE };
+        const clear = latest.current.clearSpace;
 
         // Highest zoom at which the whole area fits in the clear space
         const tightest_zoom = zoom_to_fit(area.bbox, width, height, clear);
@@ -273,15 +276,16 @@ export default function CrimeMap({ areas, overlay, selectedLsoa, onSelect, onBou
         const current_zoom = map.getZoom();
         const zoom = current_zoom < target_zoom || current_zoom > tightest_zoom ? target_zoom : current_zoom;
 
-        map.flyTo({ center: centre_in_clear_space(area.bbox, zoom, clear), zoom, duration: 600 });
+        // No flying animation for people who asked their system for reduced motion
+        const duration = matchMedia(REDUCED_MOTION_QUERY).matches ? 0 : 600;
+        map.flyTo({ center: centre_in_clear_space(area.bbox, zoom, clear), zoom, duration });
         // area_by_lsoa only fills in once; re-run then in case an area was selected before it loaded
     }, [map, selectedLsoa, area_by_lsoa]);
 
     return (
         <div
             ref={container}
-            // only show the focus ring for keyboard users, not after every click
-            className="h-full border border-ink bg-map focus-within:not-focus-visible:outline-none"
+            className="h-full bg-map"
         >
             {error && <p className="m-0 p-6 text-center text-sm text-white">{error}</p>}
         </div>

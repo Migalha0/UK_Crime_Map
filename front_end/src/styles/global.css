@@ -23,7 +23,8 @@
   --color-map: #141518;
   --color-ink: #1f2126;
   --color-ink-2: #4b4e56;
-  --color-ink-3: #7c7f87;
+  /* ink-3 is the lightest text colour: 4.5:1 or more on white and on the page and track colours */
+  --color-ink-3: #66696f;
   --color-line: #e4e4e7;
   --color-track: #efefe9;
   --color-highlight: #ffffd1;
@@ -46,7 +47,7 @@
   --color-surface: #1c1d22;
   --color-ink: #ececee;
   --color-ink-2: #b4b6bd;
-  --color-ink-3: #8a8d95;
+  --color-ink-3: #a3a6ae;
   --color-line: #34363d;
   --color-track: #2a2c32;
   --color-highlight: #3d3d14;
@@ -55,6 +56,17 @@
 }
 
 @layer base {
+  /* Respect the system's reduced-motion setting: no transitions or smooth scrolling */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   body {
     @apply m-0 bg-page;
     /* The portfolio's dotted page pattern */
@@ -64,6 +76,29 @@
 }
 
 @layer components {
+  /*
+   * Timeline slider (MonthControl): a 2px-bordered track with a yellow square thumb.
+   * The input is 32px tall so the whole strip is an easy touch target.
+   */
+  .month-slider {
+    @apply h-8 cursor-pointer appearance-none bg-transparent;
+  }
+  .month-slider::-webkit-slider-runnable-track {
+    @apply h-2 border-2 border-ink bg-track;
+  }
+  .month-slider::-moz-range-track {
+    @apply h-1 border-2 border-ink bg-track;
+  }
+  .month-slider::-webkit-slider-thumb {
+    @apply -mt-2.5 size-6 appearance-none border-2 border-ink bg-brand shadow-button;
+  }
+  .month-slider::-moz-range-thumb {
+    @apply size-5 rounded-none border-2 border-ink bg-brand shadow-button;
+  }
+  .month-slider:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ink;
+  }
+
   /* Elements the map creates itself can only be styled from here */
 
   /* Hover label created by CrimeMap; moved with transform, so it never takes pointer events */
@@ -71,6 +106,19 @@
     @apply pointer-events-none absolute top-0 left-0 z-1000 border-2 border-ink bg-brand px-2 py-1;
     @apply font-sans text-xs font-semibold whitespace-nowrap text-brand-ink shadow-button;
     will-change: transform;
+  }
+
+  /* Keyboard focus on the map itself */
+  .maplibregl-canvas:focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: -3px;
+  }
+
+  /* On phones, keep the zoom buttons and credits above the bottom sheet (App sets the inset) */
+  .maplibregl-ctrl-bottom-right,
+  .maplibregl-ctrl-bottom-left {
+    bottom: var(--map-bottom-inset, 0px);
+    transition: bottom 0.2s ease-out;
   }
 
   /* Square zoom buttons and attribution to match the panels */
