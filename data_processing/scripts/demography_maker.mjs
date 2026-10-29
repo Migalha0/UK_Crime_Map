@@ -1,10 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import csv from 'csv-parser';
 
-// import population from '../data_raw/LSOA_2021_population.json' with {type: 'json'};
+// Census 2021 ethnic group (19 categories) per LSOA → the app's 13 groups plus total_population,
+// written to front_end/public/data/LSOA_2021_demography.json.
+// Run: npm run demography
 
-const demography_csv = '/home/migalha/code/javascript/Data_projects/UKCrimeTracker/data_processing/data_raw/UK_demography.csv'
+const script_dir = path.dirname(fileURLToPath(import.meta.url));
+const demography_csv = path.join(script_dir, '../data_raw/UK_demography.csv');
+const output_path = path.join(script_dir, '../../front_end/public/data/LSOA_2021_demography.json');
 
 // creating lookup table so we can more easily append data
 const race_id_to_type = {
@@ -82,10 +87,7 @@ for(const [lsoa,data] of Object.entries(uk_demography)){
     data.total_population = total;
 }
 
-fs.writeFileSync(
-    path.join('../data_processed', 'LSOA_2021_demography.json'),
-    JSON.stringify(uk_demography, null, 2),
-    'utf-8'
-)
+// Compact (no indentation): about 30% smaller than pretty-printed, for a faster download
+fs.writeFileSync(output_path, JSON.stringify(uk_demography), 'utf-8');
 
 console.log('DEMOGRAPHY FILE CREATED')

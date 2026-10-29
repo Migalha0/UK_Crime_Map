@@ -1,5 +1,15 @@
 {
+  "scripts": {
+    "update-data": "tsx scripts/update_crime_data.mjs",
+    "correlations": "tsx scripts/correlation_maker.mjs",
+    "deprivation": "node scripts/deprivation_maker.mjs",
+    "boundaries": "node scripts/geojson_maker.mjs",
+    "demography": "node scripts/demography_maker.mjs"
+  },
   "dependencies": {
     "csv-parser": "^3.2.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
   }
 }

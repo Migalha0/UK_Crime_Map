@@ -26,3 +26,5 @@ dist-ssr
 # Files
 /data_processing/data_raw/crime/*
 !/data_processing/data_raw/crime/.gitkeep
+# Output of data_processing/scripts/verify_correlations.py --export-csv
+/data_processing/verification/

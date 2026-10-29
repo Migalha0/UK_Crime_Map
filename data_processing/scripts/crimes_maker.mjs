@@ -1,69 +1,28 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import csv from 'csv-parser';
+import { fileURLToPath } from 'node:url';
 
-// creating crime files for each month
-const folder_path = '/home/migalha/code/javascript/Data_projects/UKCrimeTracker/data_processing/data_raw/crime';
-const folders = fs.readdirSync(folder_path);
+import { build_month, write_month_json } from './lib/crime_month.mjs';
 
+// Full rebuild: one crime file per month folder in data_raw/crime.
+// For adding new months only, use update_crime_data.mjs instead.
+
+const script_dir = path.dirname(fileURLToPath(import.meta.url));
+const folder_path = path.join(script_dir, '../data_raw/crime');
+const output_path = path.join(script_dir, '../../front_end/public/data/crime');
+
+const folders = fs.readdirSync(folder_path)
+    .filter(folder => /^\d{4}-\d{2}$/.test(folder))
+    .sort();
+
+// Shared across months so a crime type keeps the same id in every file
 const crime_lookup = [];
-const crime_type_to_id = {};
 
 for (const folder of folders) {
 
-    const lsoa_crime_dictionary = {};
+    const { crime_data } = await build_month(path.join(folder_path, folder), crime_lookup);
 
-    const current_path = path.join(folder_path, folder);
-    const files = fs.readdirSync(current_path);
-
-    for (const file of files) {
-
-        const file_path = path.join(current_path, file);
-
-        await new Promise((resolve, reject) => {
-
-            fs.createReadStream(file_path)
-                .pipe(csv())
-
-                .on('data', row => {
-
-                    const lsoa = row['LSOA code'];
-                    const crime_type = row['Crime type'];
-
-                    if (!(crime_type in crime_type_to_id)) {
-                        crime_type_to_id[crime_type] = crime_lookup.length;
-                        crime_lookup.push(crime_type);
-                    }
-
-                    const crime_id = crime_type_to_id[crime_type];
-
-                    if (!lsoa_crime_dictionary[lsoa]) {
-                        lsoa_crime_dictionary[lsoa] = {};
-                    }
-
-                    if (!lsoa_crime_dictionary[lsoa][crime_id]) {
-                        lsoa_crime_dictionary[lsoa][crime_id] = 0;
-                    }
-
-                    lsoa_crime_dictionary[lsoa][crime_id]++;
-                })
-
-                .on('end', resolve)
-                .on('error', reject);
-
-        });
-    }
-
-    const month_json = {
-        crime_lookup,
-        lsoa: lsoa_crime_dictionary
-    };
-
-    fs.writeFileSync(
-        path.join('../data_processed/crime', `${folder}.json`),
-        JSON.stringify(month_json, null, 2),
-        'utf-8'
-    );
+    write_month_json(path.join(output_path, `${folder}.json`), crime_data);
 
     console.log(`${folder}.json GENERATED`);
 }
