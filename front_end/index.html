@@ -2,24 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
-    <link rel="icon" href="/src/assets/svg/eng_flag.svg">
-    <!-- general css -->
-    <link rel="stylesheet" href="/src/style.css">
-        
-    <!-- map setup -->
-    <script type="module" src="/src/scripts/leaflet_map.js"></script>
-
-    <!-- UK Police api call script-->
-    <!-- <script type="module" src="/src/api.js"></script> -->
-     <script type="module" src="src/scripts/month_buttons.js"></script>
-
+    <link rel="icon" href="/eng_flag.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Apply the theme before first paint so dark mode doesn't flash light (same rule as gmagellan.dev) -->
+    <script>
+      try {
+        var saved = localStorage.getItem("theme");
+        var dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.classList.toggle("dark", dark);
+      } catch (e) {}
+    </script>
     <title>ENGERLAND crime</title>
   </head>
   <body>
-    <div id="selected-month"></div>
-    <div id="date-tab"></div>
-    <div id="map"></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

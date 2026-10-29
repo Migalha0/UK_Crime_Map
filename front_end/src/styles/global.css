@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* MapLibre's stylesheet in a layer below utilities, so inline Tailwind classes always win over it */
+@import "maplibre-gl/dist/maplibre-gl.css" layer(components);
+
+/*
+ * Design tokens, matching gmagellan.dev: brand yellow on near-black ink,
+ * off-white page with a dotted pattern, Poppins, 2px borders and hard offset shadows.
+ * Data colours (crime red, the blue/red of correlations) are kept for the charts.
+ *
+ * Utilities read these as CSS variables, so dark mode (the .dark class on <html>,
+ * set before first paint in index.html) only has to redefine them below.
+ */
+@theme {
+  --font-sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --color-brand: #ffff00;
+  /* Text on brand yellow: dark in both themes */
+  --color-brand-ink: #141518;
+  --color-page: #f5f5f2;
+  --color-surface: #ffffff;
+  --color-map: #141518;
+  --color-ink: #1f2126;
+  --color-ink-2: #4b4e56;
+  --color-ink-3: #7c7f87;
+  --color-line: #e4e4e7;
+  --color-track: #efefe9;
+  --color-highlight: #ffffd1;
+  --color-dots: #1f212626;
+  --color-crime: #e34948;
+  --color-people: #4b4e56;
+  --color-pos: #e34948;
+  --color-neg: #2a78d6;
+
+  /* Hard offset shadows, as on the portfolio's cards and buttons */
+  --shadow-panel: 6px 6px 0 0 var(--color-ink);
+  --shadow-button: 3px 3px 0 0 var(--color-ink);
+  --shadow-button-pressed: 2px 2px 0 0 var(--color-ink);
+}
+
+/* The portfolio's dark theme: near-black page, dark grey surfaces, light text, borders and shadows */
+.dark {
+  color-scheme: dark;
+  --color-page: #121316;
+  --color-surface: #1c1d22;
+  --color-ink: #ececee;
+  --color-ink-2: #b4b6bd;
+  --color-ink-3: #8a8d95;
+  --color-line: #34363d;
+  --color-track: #2a2c32;
+  --color-highlight: #3d3d14;
+  --color-dots: #ffffff26;
+  --color-people: #b4b6bd;
+}
+
+@layer base {
+  body {
+    @apply m-0 bg-page;
+    /* The portfolio's dotted page pattern */
+    background-image: radial-gradient(var(--color-dots) 1px, transparent 1px);
+    background-size: 7px 7px;
+  }
+}
+
+@layer components {
+  /* Elements the map creates itself can only be styled from here */
+
+  /* Hover label created by CrimeMap; moved with transform, so it never takes pointer events */
+  .area-tooltip {
+    @apply pointer-events-none absolute top-0 left-0 z-1000 border-2 border-ink bg-brand px-2 py-1;
+    @apply font-sans text-xs font-semibold whitespace-nowrap text-brand-ink shadow-button;
+    will-change: transform;
+  }
+
+  /* Square zoom buttons and attribution to match the panels */
+  .maplibregl-ctrl-group {
+    @apply rounded-none! border-2 border-ink! bg-surface! shadow-button!;
+  }
+  .maplibregl-ctrl-group button {
+    @apply rounded-none! hover:bg-brand!;
+  }
+  .maplibregl-ctrl-group button + button {
+    @apply border-line!;
+  }
+  /* MapLibre's icons are dark images: lighten them on dark surfaces, but not on the yellow hover */
+  .dark .maplibregl-ctrl-group button:not(:hover) .maplibregl-ctrl-icon {
+    filter: invert(1);
+  }
+  .maplibregl-ctrl-attrib {
+    @apply rounded-none! bg-surface/80! font-sans text-[10px] text-ink;
+  }
+  .maplibregl-ctrl-attrib a {
+    @apply text-ink!;
+  }
+}
